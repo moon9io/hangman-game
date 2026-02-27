@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Hangman word guessing game — Arabic & English, dark/light theme, achievements">
+  <title>Hangman / المشنوق</title>
+
+  <!-- Fonts: Amiri (Arabic serif) + IBM Plex Mono (monospace) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="container">
+
+  <!-- ── Header ────────────────────────────────────────────────── -->
+  <header class="site-header">
+    <h1 class="site-title" data-i18n="title">Hangman</h1>
+    <p class="site-subtitle" data-i18n="subtitle">Guess the word before it's too late</p>
+  </header>
+
+  <!-- ── Controls bar ──────────────────────────────────────────── -->
+  <div class="controls-bar">
+    <!-- Difficulty -->
+    <div class="diff-group">
+      <button class="diff-btn" data-diff="easy"   data-i18n="easy">Easy</button>
+      <button class="diff-btn active" data-diff="medium" data-i18n="medium">Med</button>
+      <button class="diff-btn" data-diff="hard"   data-i18n="hard">Hard</button>
+    </div>
+
+    <div class="sep"></div>
+
+    <!-- Sound / music -->
+    <button class="icon-btn" id="sfx-toggle"   title="Sound effects">🔊</button>
+    <button class="icon-btn" id="music-toggle" title="Music" style="opacity:0.4">🎵</button>
+
+    <div class="sep"></div>
+
+    <!-- Theme -->
+    <button class="icon-btn" id="theme-toggle" title="Toggle theme">☀️</button>
+
+    <!-- Language -->
+    <button class="icon-btn lang-btn" id="lang-toggle" title="Switch language">EN → AR</button>
+
+    <!-- Achievements -->
+    <button class="icon-btn" id="achievements-btn" title="Achievements">🏆</button>
+  </div>
+
+  <!-- ── Stats bar ──────────────────────────────────────────────── -->
+  <div class="stats-bar">
+    <div class="stat-cell">
+      <div class="stat-val" id="stat-points">100</div>
+      <div class="stat-lbl" data-i18n="points">Points</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-val" id="stat-wins">0</div>
+      <div class="stat-lbl" data-i18n="wins">Wins</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-val" id="stat-losses">0</div>
+      <div class="stat-lbl" data-i18n="losses">Losses</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-val" id="stat-streak">0</div>
+      <div class="stat-lbl" data-i18n="streak">Streak</div>
+    </div>
+  </div>
+
+  <!-- ── Win / Lose messages ───────────────────────────────────── -->
+  <div class="end-message win-msg" id="win-msg">
+    <h2 data-i18n="you_won">You Won! 🎉</h2>
+    <p class="answer" id="win-answer"></p>
+    <button class="btn-primary btn-new-game" data-i18n="new_game">New Game</button>
+  </div>
+
+  <div class="end-message lose-msg" id="lose-msg">
+    <h2 data-i18n="you_lost">Game Over 💀</h2>
+    <p class="answer" id="lose-answer"></p>
+    <button class="btn-primary btn-new-game" data-i18n="new_game">New Game</button>
+  </div>
+
+  <!-- ── Game grid ──────────────────────────────────────────────── -->
+  <div class="game-grid">
+
+    <!-- Gallows -->
+    <div class="panel gallows-panel">
+      <svg class="gallows-svg" viewBox="0 0 170 210" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Structure -->
+        <line class="gallows-struct" x1="15" y1="198" x2="155" y2="198" stroke-width="3.5" stroke-linecap="round"/>
+        <line class="gallows-struct" x1="48" y1="198" x2="48"  y2="18"  stroke-width="3.5" stroke-linecap="round"/>
+        <line class="gallows-struct" x1="48" y1="18"  x2="115" y2="18"  stroke-width="3.5" stroke-linecap="round"/>
+        <line class="gallows-struct" x1="115" y1="18" x2="115" y2="42"  stroke-width="2"   stroke-linecap="round" stroke-dasharray="1 0"/>
+        <!-- Brace -->
+        <line class="gallows-struct" x1="48" y1="50"  x2="75"  y2="18"  stroke-width="2" stroke-linecap="round"/>
+
+        <!-- Body parts — shown progressively on wrong guesses -->
+        <!-- Head -->
+        <circle id="g-head" class="gallows-part" cx="115" cy="57" r="14" stroke-width="2.5"/>
+        <!-- Eyes (shown when lost) -->
+        <g id="g-eyes" class="gallows-part">
+          <line x1="109" y1="53" x2="112" y2="56" stroke-width="2" stroke-linecap="round"/>
+          <line x1="112" y1="53" x2="109" y2="56" stroke-width="2" stroke-linecap="round"/>
+          <line x1="118" y1="53" x2="121" y2="56" stroke-width="2" stroke-linecap="round"/>
+          <line x1="121" y1="53" x2="118" y2="56" stroke-width="2" stroke-linecap="round"/>
+        </g>
+        <!-- Body -->
+        <line id="g-body" class="gallows-part" x1="115" y1="71" x2="115" y2="128" stroke-width="2.5" stroke-linecap="round"/>
+        <!-- Left arm -->
+        <line id="g-larm" class="gallows-part" x1="115" y1="85" x2="88"  y2="108" stroke-width="2.5" stroke-linecap="round"/>
+        <!-- Right arm -->
+        <line id="g-rarm" class="gallows-part" x1="115" y1="85" x2="142" y2="108" stroke-width="2.5" stroke-linecap="round"/>
+        <!-- Left leg -->
+        <line id="g-lleg" class="gallows-part" x1="115" y1="128" x2="90" y2="158" stroke-width="2.5" stroke-linecap="round"/>
+        <!-- Right leg -->
+        <line id="g-rleg" class="gallows-part" x1="115" y1="128" x2="140" y2="158" stroke-width="2.5" stroke-linecap="round"/>
+        <!-- Mouth (sad, shown when lost) -->
+        <path id="g-mouth" class="gallows-part" d="M109 63 Q115 59 121 63" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </div>
+
+    <!-- Info panel -->
+    <div class="panel info-panel">
+
+      <!-- Category -->
+      <div>
+        <span class="category-tag" id="cat-label">—</span>
+      </div>
+
+      <!-- Word display -->
+      <div class="word-display" id="word-display"></div>
+
+      <!-- Timer -->
+      <div class="timer-wrap">
+        <svg class="timer-svg" viewBox="0 0 64 64">
+          <circle class="timer-track" cx="32" cy="32" r="28"/>
+          <circle id="timer-ring" cx="32" cy="32" r="28"
+            stroke-dasharray="175.9"
+            stroke-dashoffset="0"/>
+        </svg>
+        <div>
+          <div id="timer-val">60</div>
+          <div class="timer-label" data-i18n="timer_label">Time</div>
+        </div>
+      </div>
+
+      <!-- Wrong letters -->
+      <div class="meta-row">
+        <div class="stat-lbl" data-i18n="wrong_letters">Wrong Letters</div>
+        <div class="wrong-letters-row" id="wrong-letters"></div>
+      </div>
+
+      <!-- Hint -->
+      <div class="hint-row">
+        <button class="hint-btn" id="hint-btn">
+          💡 <span data-i18n="buy_hint">Buy Hint</span>
+          &nbsp;(<span class="cost" id="hint-cost">25</span>
+          <span data-i18n="points">pts</span>)
+        </button>
+        <div class="hint-text" id="hint-text">💡 ???</div>
+      </div>
+
+    </div>
+  </div><!-- /game-grid -->
+
+  <!-- ── Keyboard ───────────────────────────────────────────────── -->
+  <div class="panel keyboard-panel">
+    <div class="keyboard-label" data-i18n="keyboard_hint">Click a letter or type on your keyboard</div>
+    <div class="keyboard" id="keyboard"></div>
+  </div>
+
+</div><!-- /container -->
+
+<!-- ── Achievements Modal ─────────────────────────────────────── -->
+<div class="modal-backdrop" id="achievements-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" data-i18n="achievements">Achievements</h2>
+      <button class="modal-close" id="ach-close">✕</button>
+    </div>
+    <div class="ach-grid" id="ach-grid"></div>
+  </div>
+</div>
+
+<!-- ── Toast container ────────────────────────────────────────── -->
+<div id="toast-container"></div>
+
+<!-- ── Scripts (order matters) ───────────────────────────────── -->
+<script src="js/i18n.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/achievements.js"></script>
+<script src="js/game.js"></script>
+<script src="js/ui.js"></script>
+
+</body>
+</html>
